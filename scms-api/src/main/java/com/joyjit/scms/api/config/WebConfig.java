@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
                 // Replace with the actual URL(s) where your React frontend will be hosted.
                 // For local development: http://localhost:3000
                 // For Render deployment: https://your-frontend-service-name.onrender.com
-                .allowedOrigins("http://localhost:3000", "https://your-frontend-domain.onrender.com")
+                .allowedOrigins("http://localhost:3000","http://localhost:3000", "https://scms.onrender.com", "https://your-frontend-domain.onrender.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true); // If you're using cookies/sessions
