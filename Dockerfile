@@ -26,7 +26,7 @@ RUN mvn clean install -DskipTests
 # --- Runtime Stage ---
 # Start a new, smaller image for running the application.
 # `openjdk:17-jre-alpine` provides only the Java 17 Runtime Environment on Alpine.
-FROM openjdk:17-jre-alpine AS runtime
+FROM openjdk:17-jdk-alpine AS runtime
 
 # Create a dedicated non-root user and group for security best practices.
 # Alpine uses `addgroup` and `adduser` differently than Debian/Ubuntu.
