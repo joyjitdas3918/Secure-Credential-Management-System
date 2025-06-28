@@ -23,7 +23,7 @@ RUN mvn clean install -DskipTests
 # --- Runtime Stage ---
 # Start a new, smaller image for running the application.
 # `openjdk:21-jre-slim-bullseye` is generally a good choice.
-FROM openjdk:21-jre-slim-bullseye # This line should already be correct from last fix.
+FROM openjdk:21-jre-slim-bullseye
 
 # Create a dedicated non-root user and group for security best practices.
 RUN addgroup --system springuser && adduser --system --ingroup springuser springuser
