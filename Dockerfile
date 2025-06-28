@@ -22,7 +22,6 @@ WORKDIR /app
 # Please double-check the exact JAR name that Maven produces in your
 # `scms-api/target/` folder (e.g., it might be `scms-api-0.0.1-SNAPSHOT.jar`
 # or `scms-api-0001-SNAPSHOT.jar` from a previous output). Adjust if needed.
-COPY scms-api/target/scms-api-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port your Spring Boot application listens on.
 EXPOSE 8080
