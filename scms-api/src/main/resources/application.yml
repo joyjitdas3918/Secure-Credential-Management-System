@@ -1,0 +1,82 @@
+# Server Configuration
+server:
+  port: 8080 # Default port for the application
+
+# Spring Application Name
+spring:
+  application:
+    name: scms-api
+
+  # Datasource Configuration (for PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scms_db # Replace 'localhost:5432' if your DB is elsewhere
+    username: scms_user # Replace with your actual database username
+    password: scms_password # Replace with your actual database password
+    driver-class-name: org.postgresql.Driver
+    hikari: # HikariCP connection pool settings
+      connection-timeout: 30000 # Maximum number of milliseconds that a client will wait for a connection from the pool.
+      maximum-pool-size: 10 # Maximum number of actual connections to the database.
+      minimum-idle: 2 # Minimum number of idle connections to maintain.
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update # 'update' will update schema to match entities.
+        # 'create-drop' creates and drops schema on startup/shutdown (good for tests).
+        # 'validate' checks schema but makes no changes.
+        # 'none' disables DDL generation.
+      # For production, prefer 'validate' or 'none' and use Flyway/Liquibase for migrations.
+    show-sql: true # Log SQL statements to console (set to false for production)
+    properties:
+      hibernate:
+        format_sql: true # Format the SQL for readability
+        dialect: org.hibernate.dialect.PostgreSQLDialect # Specify PostgreSQL dialect
+
+  # Security Configuration (basic setup - detailed config in Java class)
+  security:
+    user:
+      name: admin
+      password: '{noop}password' # {noop} means no encoding. FOR DEVELOPMENT ONLY.
+      # In real apps, passwords should be securely hashed (e.g., BCrypt).
+
+# SCMS Custom Properties
+scms:
+  encryption:
+    # IMPORTANT: Replace the placeholder with a securely generated 32-byte (256-bit) key.
+    # This key is crucial for encrypting/decrypting secrets.
+    # For local testing, you can generate one using:
+    # Python console:
+    # import os, base64
+    # print(base64.b64encode(os.urandom(32)).decode('utf-8'))
+    # Example (DO NOT USE THIS LITERAL STRING IN ANY PRODUCTION ENVIRONMENT):
+    # secret-key: "jC4yQ6V+J0B9xY2ZqP3R8pL2k5hW7dF1X0XoY8U9O6C5R4P3Q2S1R0Q9W8X7Z6Y5="
+    secret-key: "YOUR_SECURELY_GENERATED_32_BYTE_BASE64_KEY_HERE"
+
+  jwt:
+    secret: "YourJWTSecretKeyThatIsAtLeast256BitLongAndSecurelyStored" # Used for signing JWTs
+    # Similar security considerations as above
+    expiration: 3600000 # Token validity in milliseconds (1 hour)
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.joyjit.scms: DEBUG # Set your application packages to DEBUG for detailed logs
+    org.springframework.web: DEBUG # To see HTTP requests/responses
+    org.hibernate.SQL: DEBUG # To see executed SQL queries (same as jpa.show-sql)
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # To see SQL parameters
+
+  file:
+    name: logs/scms-api.log # Log to a file
+    max-size: 10MB # Max file size before rollover
+    max-history: 7 # Keep 7 days of compressed history
+
+# Spring Boot Actuator Endpoints (for monitoring and management)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus # Expose these endpoints over HTTP
+  endpoint:
+    health:
+      show-details: always # Show more details on the health endpoint
