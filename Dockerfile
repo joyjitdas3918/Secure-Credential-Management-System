@@ -2,7 +2,7 @@
 # Use a small OpenJDK 21 JRE (Java Runtime Environment) image.
 # This image contains only what's necessary to run your Java application,
 # making the final Docker image as small as possible.
-FROM openjdk:21-jre-slim-bullseye
+FROM openjdk:17-jdk-alpine
 
 # Create a non-root user and group for enhanced security.
 RUN addgroup --system springuser && adduser --system --ingroup springuser springuser
