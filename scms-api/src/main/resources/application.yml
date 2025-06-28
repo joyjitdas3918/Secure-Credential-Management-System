@@ -9,15 +9,16 @@ spring:
 
   # Datasource Configuration (for PostgreSQL)
   datasource:
-    url: jdbc:postgresql://localhost:5432/scms_db # Replace 'localhost:5432' if your DB is elsewhere
-    username: postgres # Replace with your actual database username
-    password: postgres # Replace with your actual database password
-    driver-class-name: org.postgresql.Driver
-    hikari: # HikariCP connection pool settings
-      connection-timeout: 30000 # Maximum number of milliseconds that a client will wait for a connection from the pool.
-      maximum-pool-size: 10 # Maximum number of actual connections to the database.
-      minimum-idle: 2 # Minimum number of idle connections to maintain.
-
+      # IMPORTANT: This URL is for your Render production database.
+      # It must be exact and start with 'jdbc:postgresql://'
+      url: jdbc:postgresql://dpg-d1fu51ffte5s73fvrdh0-a.oregon-postgres.render.com/scms_db_y42e
+      username: joyjit # Your Render database username
+      password: POqI2YKCLYU9ZroaE51jEtP07AJeguiu # Your Render database password
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        connection-timeout: 30000
+        maximum-pool-size: 10
+        minimum-idle: 2
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
