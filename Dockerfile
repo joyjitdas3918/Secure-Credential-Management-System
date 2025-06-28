@@ -1,27 +1,45 @@
-# --- Runtime Stage (assuming JAR is pre-built) ---
-# Use a small OpenJDK 21 JRE (Java Runtime Environment) image.
-# This image contains only what's necessary to run your Java application,
-# making the final Docker image as small as possible.
-FROM openjdk:17-jdk-alpine
+# --- Build Stage ---
+# Use a Maven image with OpenJDK 21 for building the application.
+# `maven:3.9.6-eclipse-temurin-21-jammy` specifies Maven 3.9.6,
+# Eclipse Temurin OpenJDK 21, and the Jammy (Ubuntu 22.04) base.
+# This tag is often more reliable if general tags are not found.
+FROM maven:3.9.6-eclipse-temurin-21-jammy AS build
 
-# Create a non-root user and group for enhanced security.
+# Set the working directory inside the container for the build stage.
+WORKDIR /app
+
+# Copy the parent pom.xml first to leverage Docker's build cache.
+COPY pom.xml .
+
+# Copy individual module pom.xml files.
+COPY scms-api/pom.xml scms-api/
+COPY scms-core/pom.xml scms-core/
+COPY scms-infrastructure/pom.xml scms-infrastructure/
+
+# Download all project dependencies. This is crucial for caching and speeds up subsequent builds.
+RUN mvn dependency:go-offline -B
+
+# Copy all source code into the working directory.
+COPY . .
+
+# Build the multi-module application.
+RUN mvn clean install -DskipTests
+
+# --- Runtime Stage ---
+# Start a new, smaller image for running the application.
+# `openjdk:21-jre-slim-bullseye` remains a good choice for the runtime JRE.
+FROM openjdk:21-jdk-alpine
+
+# Create a dedicated non-root user and group for security best practices.
 RUN addgroup --system springuser && adduser --system --ingroup springuser springuser
 USER springuser
 
-# Set the working directory inside the container.
+# Set the working directory inside the container for the runtime.
 WORKDIR /app
 
-# Copy the pre-built executable JAR into the image.
-#
-# IMPORTANT: This Dockerfile assumes you have ALREADY RUN `mvn clean install`
-# in your project's root directory *before* building this Docker image.
-#
-# The path `scms-api/target/scms-api-0.0.1-SNAPSHOT.jar` is relative to the
-# Docker build context (which should be your project's root directory).
-#
-# Please double-check the exact JAR name that Maven produces in your
-# `scms-api/target/` folder (e.g., it might be `scms-api-0.0.1-SNAPSHOT.jar`
-# or `scms-api-0001-SNAPSHOT.jar` from a previous output). Adjust if needed.
+# Copy the built executable JAR from the 'build' stage into the runtime image.
+# IMPORTANT: Double-check the exact JAR filename produced by Maven.
+COPY --from=build /app/scms-api/target/scms-api-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port your Spring Boot application listens on.
 EXPOSE 8080
