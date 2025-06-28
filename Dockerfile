@@ -1,7 +1,7 @@
 # --- Build Stage ---
 # Use a Maven image with OpenJDK 17 on Alpine Linux for building.
 # This combination is usually very lean and widely available.
-FROM maven:3.6.0-jdk-17-slim AS build
+FROM maven:3.8.6-openjdk-17 AS build
 # Set the working directory inside the container for the build stage.
 WORKDIR /app
 
