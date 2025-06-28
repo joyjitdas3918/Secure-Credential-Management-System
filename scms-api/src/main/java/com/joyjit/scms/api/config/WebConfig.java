@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // Apply CORS to all /api endpoints
+        registry.addMapping("/**") // Apply CORS to all endpoints
                 // Replace with the actual URL(s) where your React frontend will be hosted.
                 // For local development: http://localhost:3000
                 // For Render deployment: https://your-frontend-service-name.onrender.com
