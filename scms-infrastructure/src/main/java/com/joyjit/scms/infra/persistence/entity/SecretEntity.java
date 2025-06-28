@@ -1,5 +1,6 @@
 package com.joyjit.scms.infra.persistence.entity;
 
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

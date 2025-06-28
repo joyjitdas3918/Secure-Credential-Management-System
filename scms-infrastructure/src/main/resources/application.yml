@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: scms-infrastructure
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scms_db # <--- DATABASE NAME HERE
+    username: postgres                         # <--- YOUR DB USERNAME
+    password: postgres         # <--- YOUR DB PASSWORD
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # This setting tells Hibernate to update the schema
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false # Recommended for REST APIs

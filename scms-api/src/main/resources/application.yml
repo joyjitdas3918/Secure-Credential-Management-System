@@ -10,8 +10,8 @@ spring:
   # Datasource Configuration (for PostgreSQL)
   datasource:
     url: jdbc:postgresql://localhost:5432/scms_db # Replace 'localhost:5432' if your DB is elsewhere
-    username: scms_user # Replace with your actual database username
-    password: scms_password # Replace with your actual database password
+    username: postgres # Replace with your actual database username
+    password: postgres # Replace with your actual database password
     driver-class-name: org.postgresql.Driver
     hikari: # HikariCP connection pool settings
       connection-timeout: 30000 # Maximum number of milliseconds that a client will wait for a connection from the pool.
@@ -65,11 +65,13 @@ logging:
     org.springframework.web: DEBUG # To see HTTP requests/responses
     org.hibernate.SQL: DEBUG # To see executed SQL queries (same as jpa.show-sql)
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE # To see SQL parameters
+    org.springframework.security: DEBUG
 
   file:
     name: logs/scms-api.log # Log to a file
     max-size: 10MB # Max file size before rollover
     max-history: 7 # Keep 7 days of compressed history
+
 
 # Spring Boot Actuator Endpoints (for monitoring and management)
 management:
@@ -80,3 +82,4 @@ management:
   endpoint:
     health:
       show-details: always # Show more details on the health endpoint
+
