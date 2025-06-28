@@ -42,16 +42,7 @@ spring:
 # SCMS Custom Properties
 scms:
   encryption:
-    # IMPORTANT: Replace the placeholder with a securely generated 32-byte (256-bit) key.
-    # This key is crucial for encrypting/decrypting secrets.
-    # For local testing, you can generate one using:
-    # Python console:
-    # import os, base64
-    # print(base64.b64encode(os.urandom(32)).decode('utf-8'))
-    # Example (DO NOT USE THIS LITERAL STRING IN ANY PRODUCTION ENVIRONMENT):
-    # secret-key: "jC4yQ6V+J0B9xY2ZqP3R8pL2k5hW7dF1X0XoY8U9O6C5R4P3Q2S1R0Q9W8X7Z6Y5="
-    secret-key: "YOUR_SECURELY_GENERATED_32_BYTE_BASE64_KEY_HERE"
-
+    secret-key: R1V5cWpobmFYWTRrNVo2YmQ5cGNrMzFxN3c4ZTAxcmI=
   jwt:
     secret: "YourJWTSecretKeyThatIsAtLeast256BitLongAndSecurelyStored" # Used for signing JWTs
     # Similar security considerations as above

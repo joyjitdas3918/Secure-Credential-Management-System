@@ -15,4 +15,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     // Custom query to find a user by their username (used by Spring Security)
     Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findByEmail(String username);
+
 }

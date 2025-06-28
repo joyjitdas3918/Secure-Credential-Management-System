@@ -3,6 +3,7 @@ package com.joyjit.scms.api.config;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement; // <<-- IMPORTANT NEW IMPORT
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,7 +13,9 @@ import org.springframework.context.annotation.Configuration;
                 title = "Secure Credential Management System API",
                 version = "1.0",
                 description = "API for managing secure credentials, user authentication, and authorization."
-        )
+        ),
+        // <<-- THIS IS THE MISSING PART FOR GLOBAL APPLICATION
+        security = @SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
         name = "bearerAuth", // The name of the security scheme, referenced by @SecurityRequirement
@@ -22,5 +25,5 @@ import org.springframework.context.annotation.Configuration;
         description = "JWT authentication using a Bearer token" // Description for the UI
 )
 public class OpenApiConfig {
-    // This class is primarily for annotations; no specific beans are usually needed here.
+        // This class is primarily for annotations; no specific beans are usually needed here.
 }

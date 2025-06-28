@@ -4,91 +4,91 @@ import com.joyjit.scms.core.exception.EncryptionException;
 import com.joyjit.scms.core.service.EncryptionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct; // Correct import for @PostConstruct in Spring Boot 3+
 
+// Use jakarta.crypto imports for Spring Boot 3+
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.logging.Logger; // Using java.util.logging, can switch to SLF4J/Logback later
+import java.util.logging.Logger;
+import java.security.MessageDigest; // For deterministic hashing if not using Base64 directly
+import java.nio.charset.StandardCharsets;
 
-// For Java 17+ with Jakarta EE (Spring Boot 3+), you might need:
-// import jakarta.crypto.Cipher;
-// import jakarta.crypto.KeyGenerator;
-// import jakarta.crypto.SecretKey;
-// import jakarta.crypto.spec.IvParameterSpec;
-// import jakarta.crypto.spec.SecretKeySpec;
-
-@Service // Mark this as a Spring Service component
+@Service
 public class AesEncryptionService implements EncryptionService {
 
     private static final Logger LOGGER = Logger.getLogger(AesEncryptionService.class.getName());
     private static final String ALGORITHM = "AES";
-    private static final String TRANSFORMATION = "AES/GCM/NoPadding"; // AES in Galois/Counter Mode
-    private static final int GCM_IV_LENGTH = 12; // 96 bits
-    private static final int GCM_TAG_LENGTH = 16; // 128 bits
-    private static final int KEY_LENGTH_BITS = 256; // AES-256
+    private static final String TRANSFORMATION = "AES/GCM/NoPadding";
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH_BITS = 128;
+    private static final int KEY_LENGTH_BITS = 256; // AES-256 (requires 32-byte key)
 
-    // This key should ideally come from a secure KMS or environment variable, NOT hardcoded.
-    // For demonstration, we'll use a key derived from a secret string.
-    // In a real application, ensure this key is securely managed.
-    @Value("${scms.encryption.secret-key}") // Load from application.yml/properties
-    private String secretKeyString;
+    @Value("${scms.encryption.secret-key}")
+    private String secretKeyString; // This should now be a Base64 encoded 32-byte key
 
     private SecretKey secretKey;
 
-    /**
-     * Initializes the AES key using the provided secret key string.
-     * This method is called by Spring after dependency injection.
-     */
-    // @PostConstruct // Consider using @PostConstruct if more complex setup is needed immediately after construction
+    @PostConstruct
     public void init() {
         if (secretKeyString == null || secretKeyString.isEmpty()) {
             LOGGER.severe("SCMS encryption key is not configured! Please set 'scms.encryption.secret-key' in application.yml.");
             throw new IllegalArgumentException("Encryption key not configured.");
         }
-        // For demonstration, directly convert string to key bytes.
-        // In reality, use PBKDF2 or similar KDF with a strong salt.
-        byte[] keyBytes = secretKeyString.getBytes();
-        if (keyBytes.length * 8 != KEY_LENGTH_BITS) { // Check if key is correct length (e.g., 32 bytes for AES-256)
-            try {
-                // Attempt to generate a proper key from the string if it's not the right length,
-                // or throw an error. For simplicity, we'll just resize/pad here or use a KDF.
-                // A better approach would be to use a KDF like PBKDF2 to derive the key from the string.
-                KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
-                keyGen.init(KEY_LENGTH_BITS, new SecureRandom(keyBytes)); // Use SecureRandom for key derivation
-                this.secretKey = keyGen.generateKey();
-                LOGGER.info("Generated AES key from provided string due to incorrect length.");
-            } catch (Exception e) {
-                LOGGER.severe("Failed to initialize encryption key: " + e.getMessage());
-                throw new IllegalArgumentException("Invalid encryption key configuration.", e);
+
+        try {
+            // Assume secretKeyString is a Base64 encoded 32-byte key (256 bits)
+            byte[] decodedKeyBytes = Base64.getDecoder().decode(secretKeyString);
+
+            if (decodedKeyBytes.length * 8 != KEY_LENGTH_BITS) {
+                // If the provided Base64 string does not decode to 32 bytes, it's a configuration error.
+                // For a more robust solution, you could hash the string to 32 bytes (SHA-256)
+                // or use a proper KDF (PBKDF2) here.
+                // For now, let's enforce correct length.
+                LOGGER.severe("Configured 'scms.encryption.secret-key' is not a valid Base64-encoded 256-bit (32-byte) key. Its decoded length is " + decodedKeyBytes.length + " bytes.");
+                throw new IllegalArgumentException("Invalid encryption key length. Expected Base64-encoded 32-byte key.");
+                /*
+                // ALTERNATIVE: Deterministically hash the string to 32 bytes if not correct length.
+                // This is better than SecureRandom(seed) but less secure than PBKDF2 for password-like strings.
+                LOGGER.warning("Provided 'scms.encryption.secret-key' length is not 256 bits. Hashing it to derive key.");
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(secretKeyString.getBytes(StandardCharsets.UTF_8));
+                this.secretKey = new SecretKeySpec(hash, ALGORITHM); // SHA-256 produces 32 bytes
+                */
+            } else {
+                this.secretKey = new SecretKeySpec(decodedKeyBytes, ALGORITHM);
             }
-        } else {
-            this.secretKey = new SecretKeySpec(keyBytes, ALGORITHM);
+            LOGGER.info("AES Encryption Service initialized with provided key.");
+        } catch (Exception e) {
+            LOGGER.severe("Failed to initialize encryption key: " + e.getMessage());
+            throw new IllegalArgumentException("Invalid encryption key configuration.", e);
         }
-        LOGGER.info("AES Encryption Service initialized with provided key.");
     }
 
     @Override
     public String encrypt(String plaintext) throws EncryptionException {
-        if (secretKey == null) {
-            init(); // Ensure key is initialized if not already (e.g., if @PostConstruct is not used)
+        if (plaintext == null || plaintext.isEmpty()) {
+            return plaintext;
         }
+        if (secretKey == null) {
+            throw new EncryptionException("Encryption key not initialized.");
+        }
+
         try {
             byte[] iv = new byte[GCM_IV_LENGTH];
-            new SecureRandom().nextBytes(iv); // Generate a random IV for each encryption
+            new SecureRandom().nextBytes(iv);
 
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
 
-            byte[] cipherText = cipher.doFinal(plaintext.getBytes());
+            byte[] cipherTextWithTag = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
 
-            // Combine IV and cipherText for storage
-            byte[] encryptedData = new byte[iv.length + cipherText.length];
+            byte[] encryptedData = new byte[iv.length + cipherTextWithTag.length];
             System.arraycopy(iv, 0, encryptedData, 0, iv.length);
-            System.arraycopy(cipherText, 0, encryptedData, iv.length, cipherText.length);
+            System.arraycopy(cipherTextWithTag, 0, encryptedData, iv.length, cipherTextWithTag.length);
 
             return Base64.getEncoder().encodeToString(encryptedData);
         } catch (Exception e) {
@@ -99,29 +99,35 @@ public class AesEncryptionService implements EncryptionService {
 
     @Override
     public String decrypt(String encryptedText) throws EncryptionException {
-        if (secretKey == null) {
-            init(); // Ensure key is initialized
+        if (encryptedText == null || encryptedText.isEmpty()) {
+            return encryptedText;
         }
+        if (secretKey == null) {
+            throw new EncryptionException("Encryption key not initialized.");
+        }
+
         try {
             byte[] decodedData = Base64.getDecoder().decode(encryptedText);
 
-            if (decodedData.length < GCM_IV_LENGTH + GCM_TAG_LENGTH) { // IV + minimum tag length
-                throw new IllegalArgumentException("Encrypted data too short.");
+            if (decodedData.length < GCM_IV_LENGTH + (GCM_TAG_LENGTH_BITS / 8)) {
+                throw new IllegalArgumentException("Encrypted data too short or invalid format.");
             }
 
             byte[] iv = new byte[GCM_IV_LENGTH];
             System.arraycopy(decodedData, 0, iv, 0, GCM_IV_LENGTH);
 
-            byte[] cipherText = new byte[decodedData.length - GCM_IV_LENGTH];
-            System.arraycopy(decodedData, GCM_IV_LENGTH, cipherText, 0, cipherText.length);
+            byte[] cipherTextWithTag = new byte[decodedData.length - GCM_IV_LENGTH];
+            System.arraycopy(decodedData, GCM_IV_LENGTH, cipherTextWithTag, 0, cipherTextWithTag.length);
 
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
 
-            byte[] plaintext = cipher.doFinal(cipherText);
-            return new String(plaintext);
+            byte[] plaintext = cipher.doFinal(cipherTextWithTag);
+            return new String(plaintext, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            LOGGER.severe("Decryption failed: " + e.getClass().getName() + ": " + e.getMessage());
+            // Logging detailed exception for debugging BadPaddingException / AEADBadTagException
+            LOGGER.severe("Decryption failed: " + e.getClass().getName() + ": " + e.getMessage() +
+                    ". Make sure the same key used for encryption is used for decryption and data is not corrupted.");
             throw new EncryptionException("Failed to decrypt data", e);
         }
     }

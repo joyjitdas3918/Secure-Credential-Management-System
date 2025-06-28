@@ -49,6 +49,7 @@ public class SecretController {
         return SecretResponse.builder()
                 .id(secret.getId())
                 .path(secret.getPath())
+                .value(encryptionService.decrypt(secret.getEncryptedValue()))
                 .version(secret.getVersion())
                 .encryptionMetadata(secret.getEncryptionMetadata())
                 .createdAt(secret.getCreatedAt())

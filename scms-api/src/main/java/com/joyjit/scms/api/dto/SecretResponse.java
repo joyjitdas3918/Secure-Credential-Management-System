@@ -15,6 +15,7 @@ public class SecretResponse {
     UUID id;
     String path;
     int version;
+    String value;
     String encryptionMetadata;
     Instant createdAt;
     Instant updatedAt;
