@@ -1,7 +1,7 @@
 # --- Build Stage ---
 # Use a Maven image with OpenJDK 21 for building the application.
 # `maven:3.9.6-sapmachine-jdk-21` is a robust choice.
-FROM maven:3.9.6-sapmachine-jdk-21 AS build # <--- CHANGE THIS LINE
+FROM maven:3.9.6-sapmachine-jdk-21 AS build
 WORKDIR /app
 
 # Copy the parent pom.xml first to leverage Docker's build cache.
